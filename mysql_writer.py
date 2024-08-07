@@ -9,62 +9,61 @@ logging.basicConfig(level=logging.INFO)
 db_config = {
     'PASS': environ.get('PASS', ''),
     'DOMAIN': environ.get('DOMAIN', ''),
-    'HASH_SIZE': int(environ.get('HASH_SIZE', '')),
+    'DATA_TYPE' : environ.get('DATA_TYPE', ''),
+    'DATA_SIZE': int(environ.get('HASH_SIZE', '')),
     'RECORDS': int(environ.get('RECORDS', '')),
     'INSERT_DELAY' : int(environ.get('INSERT_DELAY', '')),
 }
 
+conn = mysql.connector.connect(
+            host=db_config['DOMAIN'],
+            user='admin',
+            password=db_config['PASS'],
+            database='db',
+            port='3306'
+        )
 
-def generate_random_hash(numb: int = 1) -> str:
+def generate_random_hash(numb: int ) -> str:
     import random
     import string
     import hashlib
-    if numb == 1:
-        return hashlib.sha256(''.join(random.choices(string.ascii_letters + string.digits, k=64)).encode()).hexdigest()
-    else:
-        return ''.join(
-            [hashlib.sha256(''.join(random.choices(string.ascii_letters + string.digits, k=64)).encode()).hexdigest()
-             for _ in range(numb)])
+    return ''.join(
+        [hashlib.sha256(''.join(random.choices(string.ascii_letters + string.digits, k=64)).encode()).hexdigest()
+            for _ in range(numb)])
 
 
-def test_mysql_connection():
-    try:
-        conn = mysql.connector.connect(
-            host=db_config['DOMAIN'],
-            user='admin',
-            password=db_config['PASS'],
-            database='db',
-            port='3306'
-        )
-        logging.info("Successfully connected to MySQL")
+def generate_text(numb: int) -> str:
+    text = ' The quick brown fox jumps over the lazy dog today. '
+    return ''.join([text for _ in range(numb)])
+
+
+def mysql_write_hash(size: int) -> bool:
+    if conn.is_connected():
+        logging.info("Connected to the database.")
         cur = conn.cursor()
-        cur.execute("CREATE TABLE IF NOT EXISTS hashes (id serial PRIMARY KEY, hash TEXT, created_at TIMESTAMP);")
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        logging.error(f"MySQL connection failed: {e}")
-        return False
-
-
-def mysql_write_hash(size: int = 100) -> bool:
-    if test_mysql_connection():
-        conn = mysql.connector.connect(
-            host=db_config['DOMAIN'],
-            user='admin',
-            password=db_config['PASS'],
-            database='db',
-            port='3306'
-        )
-        cur = conn.cursor()
-        for _ in range(size):
-            time.sleep(db_config['INSERT_DELAY']*0.001)
-            cur.execute(f"INSERT INTO hashes (hash, created_at) VALUES ('{generate_random_hash(db_config['HASH_SIZE'])}', '{datetime.now()}')")
+        if db_config['DATA_TYPE'] == 'h':
+            cur.execute("CREATE TABLE IF NOT EXISTS hashes (id serial PRIMARY KEY, hash TEXT, created_at TIMESTAMP);")
             conn.commit()
-        conn.close()
-        return True
-    return False
-
+            for _ in range(size):
+                time.sleep(db_config['INSERT_DELAY']*0.001)
+                cur.execute(f"INSERT INTO hashes (hash, created_at) VALUES ('{generate_random_hash(db_config['DATA_SIZE'])}', '{datetime.now()}')")
+                conn.commit()
+            conn.close()
+        elif db_config['DATA_TYPE'] == 't':
+            cur.execute("CREATE TABLE IF NOT EXISTS text (id serial PRIMARY KEY, texts TEXT, created_at TIMESTAMP);")
+            conn.commit()
+            for _ in range(size):
+                time.sleep(db_config['INSERT_DELAY']*0.001)
+                cur.execute(f"INSERT INTO text (texts, created_at) VALUES ('{generate_text(db_config['DATA_SIZE'])}', '{datetime.now()}')")
+                conn.commit()
+            conn.close()
+        else:
+            logging.error("Invalid data type.")
+            return False
+    else:
+        logging.error("Failed to connect to the database.")
+        return False
+    return True
 
 if __name__ == '__main__':
     if mysql_write_hash(db_config['RECORDS']):
