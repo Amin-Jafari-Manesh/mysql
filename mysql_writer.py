@@ -38,7 +38,7 @@ def generate_text(numb: int) -> str:
 
 
 def mysql_write_hash(size: int) -> bool:
-    if conn.is_connected():
+    if conn and conn.is_connected():
         logging.info("Connected to the database.")
         cur = conn.cursor()
         if db_config['DATA_TYPE'] == 'h':
