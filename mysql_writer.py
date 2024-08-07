@@ -67,6 +67,6 @@ def mysql_write_hash(size: int) -> bool:
 
 if __name__ == '__main__':
     if mysql_write_hash(db_config['RECORDS']):
-        logging.info("Hashes successfully written to the database.")
+        logging.info("data successfully written to the database.")
     else:
         logging.error("Failed to write hashes to the database.")
