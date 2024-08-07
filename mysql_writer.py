@@ -63,7 +63,7 @@ def mysql_write_data(conn, size: int) -> bool:
             return False
         
         conn.commit()
-
+        
         for i in range(size):
             start_time = time.time()
             if db_config['DATA_TYPE'] == 'h':
@@ -75,10 +75,7 @@ def mysql_write_data(conn, size: int) -> bool:
             
             conn.commit()
             end_time = time.time()
-            
-            logging.info(f"Inserted record {i+1}/{size} into {table_name} table.")
-            logging.info(f"Insert execution time: {end_time - start_time:.4f} seconds")
-            
+            logging.info(f"Insert execution time: {end_time - start_time:.4f} seconds") 
             time.sleep(db_config['INSERT_DELAY'] * 0.001)
     except Error as e:
         logging.error(f"Database error: {e}")
@@ -92,16 +89,12 @@ def mysql_write_data(conn, size: int) -> bool:
 def main():
     conn = connect_to_database()
     if conn:
-        try:
-            if mysql_write_data(conn, db_config['RECORDS']):
-                logging.info("Data successfully written to the database.")
-            else:
-                logging.error("Failed to write data to the database.")
-        except KeyboardInterrupt:
-            logging.info("Script interrupted by user.")
-        finally:
-            conn.close()
-            logging.info("Database connection closed.")
+        if mysql_write_data(conn, db_config['RECORDS']):
+            logging.info("Data successfully written to the database.")
+        else:
+            logging.error("Failed to write data to the database.")
+        conn.close()
+        logging.info("Database connection closed.")
     else:
         logging.error("Failed to connect to the database.")
 
