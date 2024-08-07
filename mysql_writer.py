@@ -10,7 +10,7 @@ db_config = {
     'PASS': environ.get('PASS', ''),
     'DOMAIN': environ.get('DOMAIN', ''),
     'DATA_TYPE' : environ.get('DATA_TYPE', ''),
-    'DATA_SIZE': int(environ.get('HASH_SIZE', '')),
+    'DATA_SIZE': int(environ.get('DATA_SIZE', '')),
     'RECORDS': int(environ.get('RECORDS', '')),
     'INSERT_DELAY' : int(environ.get('INSERT_DELAY', '')),
 }
